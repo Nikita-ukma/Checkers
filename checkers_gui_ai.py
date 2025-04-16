@@ -5,8 +5,10 @@ from checkers_interface import CheckersInterface
 from checkers_ai import CheckersAI
 
 # Константи
-WINDOW_SIZE = 800
-CELL_SIZE = WINDOW_SIZE // 8
+WINDOW_SIZE = 600
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+CELL_SIZE = SCREEN_HEIGHT // 8
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -29,7 +31,8 @@ class CheckersGUIAI:
         """
         # Ініціалізація PyGame
         pygame.init()
-        self.screen = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen.fill((206, 196, 194))
         pygame.display.set_caption(f"Шашки проти AI (Складність: {difficulty})")
         
         # Логіка гри
@@ -59,16 +62,22 @@ class CheckersGUIAI:
         self.clock = pygame.time.Clock()
         
         # Додаємо кнопку "Нова гра"
-        self.new_game_button = pygame.Rect(WINDOW_SIZE // 2 - 75, WINDOW_SIZE - 40, 150, 30)
-        
+        new_game_but_width = SCREEN_HEIGHT // 4
+        new_game_but_height = SCREEN_HEIGHT // 20
+        new_game_but_start_width = SCREEN_HEIGHT + (SCREEN_WIDTH - SCREEN_HEIGHT - new_game_but_width) // 2
+        new_game_but_start_height = SCREEN_HEIGHT - SCREEN_HEIGHT // 10
+        self.new_game_button = pygame.Rect(new_game_but_start_width, new_game_but_start_height, new_game_but_width, new_game_but_height)
+
         # Додаємо селектор складності
         self.difficulties = ["easy", "medium", "hard"]
         self.current_difficulty = self.difficulties.index(difficulty)
         self.difficulty_buttons = []
         for i, diff in enumerate(self.difficulties):
-            button_width = 80
-            button_x = 20 + i * (button_width + 10)
-            self.difficulty_buttons.append(pygame.Rect(button_x, WINDOW_SIZE - 40, button_width, 30))
+            button_width = SCREEN_HEIGHT // 6
+            button_start_width = SCREEN_HEIGHT + (SCREEN_WIDTH - SCREEN_HEIGHT - button_width) // 2
+            button_height = SCREEN_HEIGHT // 20
+            button_start_height = SCREEN_HEIGHT // 10 + i * button_height
+            self.difficulty_buttons.append(pygame.Rect(button_start_width, button_start_height, button_width, button_height))
     
     def _scale_image(self, image_path):
         """
