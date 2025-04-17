@@ -74,6 +74,17 @@ set_piece(Board, X, Y, Piece, NewBoard) :-
     valid_position(X, Y),
     set_piece_helper(Board, X, Y, Piece, 1, NewBoard).
 
+% make_king_move(++Board, ++FromX, ++FromY, ++ToX, ++ToY, ++Player, --NewBoard)
+% Perform a king move
+make_king_move(Board, FromX, FromY, ToX, ToY, Player, NewBoard) :-
+    valid_king_move(Board, FromX, FromY, ToX, ToY, Player),
+    % Get the king piece
+    get_piece(Board, FromX, FromY, Piece),
+    % Remove the king from original position
+    set_piece(Board, FromX, FromY, empty, TempBoard),
+    % Place the king at the new position
+    set_piece(TempBoard, ToX, ToY, Piece, NewBoard).
+    
 % set_piece_helper(++BoardPart, ++X, ++Y, ++Piece, ++CurrentY, --NewBoardPart)
 % Helper predicate to set a piece at specific position - processes rows
 set_piece_helper([], _, _, _, _, []).
