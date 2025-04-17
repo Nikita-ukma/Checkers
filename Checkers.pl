@@ -1,4 +1,4 @@
-% checkers.pl - Fixed checkers game logic
+% checkers.pl - Fixed checkers game logic with parameter indicators
 
 % Board representation 8x8
 % Using coordinates (X, Y), where X and Y are numbers from 1 to 8
@@ -11,7 +11,8 @@
 % wk - white king
 % bk - black king
 
-% Initial board position
+% initial_board(--Board)
+% Initializes a standard starting position board
 initial_board([
     [empty, b, empty, b, empty, b, empty, b],
     [b, empty, b, empty, b, empty, b, empty],
@@ -23,7 +24,8 @@ initial_board([
     [w, empty, w, empty, w, empty, w, empty]
 ]).
 
-% Empty board for testing
+% empty_board(--Board)
+% Initializes a completely empty board for testing
 empty_board([
     [empty, empty, empty, empty, empty, empty, empty, empty],
     [empty, empty, empty, empty, empty, empty, empty, empty],
@@ -35,6 +37,7 @@ empty_board([
     [empty, empty, empty, empty, empty, empty, empty, empty]
 ]).
 
+% get_piece(++Board, ++X, ++Y, --Piece)
 % Get the piece at position (X, Y)
 get_piece(Board, X, Y, Piece) :-
     X >= 1, X =< 8,
@@ -42,30 +45,37 @@ get_piece(Board, X, Y, Piece) :-
     nth1(Y, Board, Row),
     nth1(X, Row, Piece).
 
+% is_empty(++Board, ++X, ++Y)
 % Check if a square is empty
 is_empty(Board, X, Y) :-
     get_piece(Board, X, Y, empty).
 
+% is_player_piece(++Piece, --Player)
 % Check if a piece belongs to a player
 is_player_piece(w, white).
 is_player_piece(wk, white).
 is_player_piece(b, black).
 is_player_piece(bk, black).
 
+% opponent(++Player, --OpponentPlayer)
 % Define opponent relationship
 opponent(white, black).
 opponent(black, white).
 
+% valid_position(++X, ++Y)
 % Check if position is within board boundaries
 valid_position(X, Y) :-
     X >= 1, X =< 8,
     Y >= 1, Y =< 8.
 
+% set_piece(++Board, ++X, ++Y, ++Piece, --NewBoard)
 % Change board state: place a piece at a position
 set_piece(Board, X, Y, Piece, NewBoard) :-
     valid_position(X, Y),
     set_piece_helper(Board, X, Y, Piece, 1, NewBoard).
 
+% set_piece_helper(++BoardPart, ++X, ++Y, ++Piece, ++CurrentY, --NewBoardPart)
+% Helper predicate to set a piece at specific position - processes rows
 set_piece_helper([], _, _, _, _, []).
 set_piece_helper([Row|Rest], X, Y, Piece, CurrentY, [NewRow|NewRest]) :-
     CurrentY =:= Y,
@@ -77,6 +87,8 @@ set_piece_helper([Row|Rest], X, Y, Piece, CurrentY, [Row|NewRest]) :-
     NextY is CurrentY + 1,
     set_piece_helper(Rest, X, Y, Piece, NextY, NewRest).
 
+% set_row_piece(++RowPart, ++X, ++Piece, ++CurrentX, --NewRowPart)
+% Helper predicate to set a piece at specific position - processes columns
 set_row_piece([], _, _, _, []).
 set_row_piece([_|Rest], X, Piece, CurrentX, [Piece|NewRest]) :-
     CurrentX =:= X,
@@ -87,10 +99,12 @@ set_row_piece([Cell|Rest], X, Piece, CurrentX, [Cell|NewRest]) :-
     NextX is CurrentX + 1,
     set_row_piece(Rest, X, Piece, NextX, NewRest).
 
+% valid_direction(++Player, ++FromY, ++ToY)
 % Check direction of movement (white moves up, black moves down)
 valid_direction(white, FromY, ToY) :- ToY < FromY.
 valid_direction(black, FromY, ToY) :- ToY > FromY.
 
+% valid_simple_move(++Board, ++FromX, ++FromY, ++ToX, ++ToY, ++Player)
 % Basic rules for single move of a regular checker
 valid_simple_move(Board, FromX, FromY, ToX, ToY, Player) :-
     get_piece(Board, FromX, FromY, Piece),
@@ -100,6 +114,7 @@ valid_simple_move(Board, FromX, FromY, ToX, ToY, Player) :-
     abs(ToX - FromX) =:= 1,
     abs(ToY - FromY) =:= 1.
 
+% make_simple_move(++Board, ++FromX, ++FromY, ++ToX, ++ToY, ++Player, --NewBoard)
 % Perform a simple move (non-capture)
 make_simple_move(Board, FromX, FromY, ToX, ToY, Player, NewBoard) :-
     valid_simple_move(Board, FromX, FromY, ToX, ToY, Player),
@@ -114,11 +129,13 @@ make_simple_move(Board, FromX, FromY, ToX, ToY, Player, NewBoard) :-
         set_piece(TempBoard, ToX, ToY, Piece, NewBoard)
     ).
 
+% should_promote(++Piece, ++Y, --PromotedPiece)
 % Promotion to king
 should_promote(w, 1, wk) :- !.  % White piece reaches top row
 should_promote(b, 8, bk) :- !.  % Black piece reaches bottom row
 should_promote(Piece, _, Piece).  % No promotion
 
+% valid_capture(++Board, ++FromX, ++FromY, ++ToX, ++ToY, ++Player)
 % Capture move logic
 valid_capture(Board, FromX, FromY, ToX, ToY, Player) :-
     get_piece(Board, FromX, FromY, Piece),
@@ -135,6 +152,7 @@ valid_capture(Board, FromX, FromY, ToX, ToY, Player) :-
     is_player_piece(CapturedPiece, OpponentPlayer),
     opponent(Player, OpponentPlayer).
 
+% make_capture_move(++Board, ++FromX, ++FromY, ++ToX, ++ToY, ++Player, --NewBoard)
 % Perform a capture move
 make_capture_move(Board, FromX, FromY, ToX, ToY, Player, NewBoard) :-
     valid_capture(Board, FromX, FromY, ToX, ToY, Player),
@@ -154,11 +172,13 @@ make_capture_move(Board, FromX, FromY, ToX, ToY, Player, NewBoard) :-
         set_piece(TempBoard2, ToX, ToY, Piece, NewBoard)
     ).
 
+% sign(+N, --Sign)
 % Helper function - sign of a number
 sign(N, 1) :- N > 0, !.
 sign(N, -1) :- N < 0, !.
 sign(0, 0).
 
+% valid_king_move(++Board, ++FromX, ++FromY, ++ToX, ++ToY, ++Player)
 % King movement rules - checking diagonal path
 valid_king_move(Board, FromX, FromY, ToX, ToY, Player) :-
     get_piece(Board, FromX, FromY, Piece),
@@ -173,6 +193,7 @@ valid_king_move(Board, FromX, FromY, ToX, ToY, Player) :-
     % Path must be clear
     path_is_clear(Board, FromX, FromY, ToX, ToY).
 
+% path_is_clear(++Board, ++FromX, ++FromY, ++ToX, ++ToY)
 % Check if path is clear for king movement
 path_is_clear(Board, FromX, FromY, ToX, ToY) :-
     % Calculate step direction
@@ -183,6 +204,8 @@ path_is_clear(Board, FromX, FromY, ToX, ToY) :-
     NextY is FromY + DirY,
     path_is_clear_helper(Board, NextX, NextY, ToX, ToY, DirX, DirY).
 
+% path_is_clear_helper(++Board, ++X, ++Y, ++ToX, ++ToY, ++DirX, ++DirY)
+% Recursively check if all squares in path are empty
 path_is_clear_helper(_, X, Y, X, Y, _, _) :- !.  % Reached destination
 path_is_clear_helper(Board, X, Y, ToX, ToY, DirX, DirY) :-
     X \= ToX, Y \= ToY,  % Not at destination yet
@@ -191,11 +214,14 @@ path_is_clear_helper(Board, X, Y, ToX, ToY, DirX, DirY) :-
     NextY is Y + DirY,
     path_is_clear_helper(Board, NextX, NextY, ToX, ToY, DirX, DirY).
 
+% print_board(++Board)
 % Display board (for testing)
 print_board(Board) :-
     writeln('  1 2 3 4 5 6 7 8'),
     print_board_rows(Board, 1).
 
+% print_board_rows(++Rows, ++RowNum)
+% Helper for printing board rows
 print_board_rows([], _).
 print_board_rows([Row|Rest], RowNum) :-
     write(RowNum), write(' '),
@@ -204,6 +230,8 @@ print_board_rows([Row|Rest], RowNum) :-
     NextRowNum is RowNum + 1,
     print_board_rows(Rest, NextRowNum).
 
+% print_row(++Row)
+% Helper for printing a single row
 print_row([]).
 print_row([empty|Rest]) :- write('. '), print_row(Rest).
 print_row([w|Rest]) :- write('w '), print_row(Rest).
@@ -211,6 +239,7 @@ print_row([b|Rest]) :- write('b '), print_row(Rest).
 print_row([wk|Rest]) :- write('W '), print_row(Rest).
 print_row([bk|Rest]) :- write('B '), print_row(Rest).
 
+% test_get_piece
 % Test basic functionality
 test_get_piece :-
     initial_board(Board),
@@ -221,6 +250,8 @@ test_get_piece :-
     writeln('Piece at position (1,6):'),
     writeln(Piece2).
 
+% test_valid_move
+% Test move validity
 test_valid_move :-
     initial_board(Board),
     writeln('Checking move (1,6) -> (2,5):'),
@@ -234,6 +265,8 @@ test_valid_move :-
         writeln('Move not possible')
     ).
 
+% test_set_piece
+% Test board modification
 test_set_piece :-
     initial_board(Board),
     writeln('Initial board:'),
@@ -242,6 +275,8 @@ test_set_piece :-
     writeln('Board after moving white piece to position (1,4):'),
     print_board(NewBoard).
 
+% run_basic_tests
+% Run basic test cases
 run_basic_tests :-
     writeln('=== Testing piece retrieval ==='),
     test_get_piece,
@@ -252,6 +287,7 @@ run_basic_tests :-
     writeln('=== Testing board modification ==='),
     test_set_piece.
 
+% test_promotion
 % Fixed test_promotion function
 test_promotion :-
     % Setup board with white piece at row 2
@@ -267,6 +303,7 @@ test_promotion :-
     get_piece(NewBoard, 2, 1, ResultPiece),
     write('Resulting piece: '), writeln(ResultPiece).
 
+% test_capture
 % Test capture logic
 test_capture :-
     % Create a board with capture opportunity
@@ -288,6 +325,7 @@ test_capture :-
     writeln('After capture:'),
     print_board(NewBoard).
 
+% test_king_movement
 % Test king movement
 test_king_movement :-
     % Create a board with kings
@@ -320,6 +358,7 @@ test_king_movement :-
         writeln('Move is not valid (correct!)')
     ).
 
+% run_extended_tests
 % Run tests in separate parts
 run_extended_tests :-
     writeln('=== Testing basic promotion logic ==='),
