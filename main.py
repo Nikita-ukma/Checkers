@@ -9,8 +9,8 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 DARK_BROWN = (139, 69, 19)
 LIGHT_BROWN = (222, 184, 135)
-BUTTON_COLOR = (70, 130, 180)  # Сталевий синій
-BUTTON_HOVER_COLOR = (100, 149, 237)  # Синій колір при наведенні
+BUTTON_COLOR = (101, 67, 33)  # Темно-коричневий
+BUTTON_HOVER_COLOR = (140, 94, 47)  # Світліший коричневий при наведенні
 
 class GameMenu:
     """
